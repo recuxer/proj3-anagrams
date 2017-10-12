@@ -73,17 +73,17 @@ def success():
 #   a JSON request handler
 #######################
 
-
+"""
 @app.route("/_check", methods=["POST"])
 def check():
-    """
+    
     User has submitted the form with a word ('attempt')
     that should be formed from the jumble and on the
     vocabulary list.  We respond depending on whether
     the word is on the vocab list (therefore correctly spelled),
     made only from the jumble letters, and not a word they
     already found.
-    """
+    
     app.logger.debug("Entering check")
 
     # The data we need, from form and from cookie
@@ -117,19 +117,48 @@ def check():
     else:
        return flask.redirect(flask.url_for("keep_going"))
 
+"""
 ###############
 # AJAX request handlers
 #   These return JSON, rather than rendering pages.
 ###############
 
 
-@app.route("/_example")
-def example():
+@app.route("/_checkmatch")
+def checkmatch():
     """
     Example ajax request handler
     """
     app.logger.debug("Got a JSON request")
-    rslt = {"key": "value"}
+    
+    text = flask.request.args.get("text", type=str)
+    jumble = flask.session["jumble"]
+    matches = flask.session.get("matches", [])
+    
+    #test for match
+    in_jumble = LetterBag(jumble).contains(text)
+    matched = WORDS.has(text)
+
+    if matched and in_jumble and not (text in matches):  #success case
+        matches.append(text)
+        flask.session["matches"] = matches
+        rslt = {"gotmatch": True }
+    elif text in matches:
+        #flask.flash("you already found {}".format(text))
+        rslt = {"alreadyfound": True }
+    elif not matched:
+        #flask.flash("{} isn't in the list of words".format(text))
+        rslt = {"notinlist": True }
+    elif not in_jumble:
+        #flask.flash(
+        #    '"{}" can\'t be made from the letters {}'.format(text, jumble))
+        rslt = {"cantmake" : True }
+    else:
+        app.logger.debug("this case shouldn't happen!")
+        assert False   #raises asserterror
+    
+
+    #rslt = {"gotmatch": matched }
     return flask.jsonify(result=rslt)
 
 
