@@ -138,27 +138,25 @@ def checkmatch():
     #test for match
     in_jumble = LetterBag(jumble).contains(text)
     matched = WORDS.has(text)
-
+    print(text)
+    print(matches)
     if matched and in_jumble and not (text in matches):  #success case
         matches.append(text)
         flask.session["matches"] = matches
         rslt = {"gotmatch": True }
     elif text in matches:
-        #flask.flash("you already found {}".format(text))
         rslt = {"alreadyfound": True }
     elif not matched:
-        #flask.flash("{} isn't in the list of words".format(text))
         rslt = {"notinlist": True }
     elif not in_jumble:
-        #flask.flash(
-        #    '"{}" can\'t be made from the letters {}'.format(text, jumble))
         rslt = {"cantmake" : True }
     else:
         app.logger.debug("this case shouldn't happen!")
         assert False   #raises asserterror
     
-
-    #rslt = {"gotmatch": matched }
+    if len(matches) >= flask.session["target_count"]:
+       rslt = {"success" : True }
+     
     return flask.jsonify(result=rslt)
 
 

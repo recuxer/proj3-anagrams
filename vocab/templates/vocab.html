@@ -88,7 +88,7 @@
 
 <p id="response"> </p> <!-- java will insert text -->
 <p id="message"> Matches: </p>
-
+<meta id="prevattempt"> </meta> <!-- create meta to store prev attempt to prevent duplicate get requests -->
 <script>
 
 //kill normal func of submission (taken from example file)
@@ -98,30 +98,32 @@ $("#entry").submit( function(event) {
 
 $("#attempt").keyup(function(event) {
     var txt = $("#attempt").val();   //current input field values
+    var prevtxt = $("#prevattempt").val();	//var for prev attempt check
     var keycode = event.which;   //key which was just depressed
     var letter = String.fromCharCode(keycode);
-    var curMessages = $("#message").val();
+    var curMessages = $("#message").val();	//variable to successivly output found words
     if (! "ABCDEFGHIJKLMNOPQRSTUVWXYZ".includes(letter)) { return }
+    if (prevtxt == txt) { return }
+    $("#prevattempt").val(txt);
     $.getJSON( "/_checkmatch", { text: txt },
               function(miscdata) {
-                resultval = miscdata.result.gotmatch; 
+                resultval = miscdata.result.gotmatch;	//retrieve json object 
                 console.log("resultval: " + resultval)
                 if (miscdata.result.gotmatch) {
                    $("#response").html("got a match!");
+                   $("#message").append(txt + " ");
                    $("#attempt").val("");
-                   if (curMessages.indexOf(txt) >= 0) {
-                     $("#message").append(txt + " ");
-                   }
                 } else if (miscdata.result.alreadyfound) {
                    $("#response").html("you already found that!");
                 } else if (miscdata.result.notinlist) {
                    $("#response").html("that's not in the list of words!");
                 } else if (miscdata.result.cantmake) {
                    $("#response").html("that can't be made from the letters!"); 
+                } else if (miscdata.result.success) {
+                    window.location = "/success";
                 } else {
                    $("#response").html("try again!");
                 }
-                //setTimeout( ,500);
             }
             );
 });
